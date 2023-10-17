@@ -13,8 +13,7 @@ export class Screenshot2D extends cc.Component {
     @property(cc.Node)
     container: cc.Node = null!;
 
-    @property(cc.Sprite)
-    renderTestSp: cc.Sprite = null!;
+
 
 
     rt: RenderTexture = null;
@@ -90,9 +89,22 @@ export class Screenshot2D extends cc.Component {
     }
 
     private isTrim: boolean = true;
+    private isScale:boolean = true;
     private _setSpTrim(sp: cc.Sprite, isTrim: boolean) {
         sp.trim = isTrim;
         sp.sizeMode = isTrim ? cc.Sprite.SizeMode.TRIMMED : cc.Sprite.SizeMode.RAW;
+    }
+
+    onChangeEditorType(a:cc.Toggle){
+        // this.isScale = 
+        this.isScale = a.node.name == "toggle1";
+        console.log("isScale:"+this.isScale);
+    }
+
+    onChangeEditorValue(value: string, editbox:cc.EditBox, customEventData:any){
+        this.isScale ? 
+        this.onChangeSpScale(value, editbox, customEventData):
+        this.onChangeSpSize(value, editbox, customEventData);
     }
 
     onChangeSpScale(value: string, editbox:cc.EditBox, customEventData:any) {
@@ -107,6 +119,20 @@ export class Screenshot2D extends cc.Component {
             this._spScaleY = scale;
         }
         this.sprites.forEach(sp => { sp.node.setScale(this._spScaleX, this._spScaleY) });
+    }
+
+    onChangeSpSize(value: string, editbox:cc.EditBox, customEventData:any) {
+        const size = parseFloat(value);
+        if (isNaN(size)) {
+            showTips("请输入数字！！！！");
+            return;
+        }
+        this._spScaleX = 1;
+        this._spScaleY = 1;
+
+        let isWidth = customEventData == "true";
+        let key = isWidth ? "width" :"height";
+        this.sprites.forEach(sp => { sp.node[key] = size;sp.node.setScale(this._spScaleX, this._spScaleY)});
     }
 
     onSaveAll() {
