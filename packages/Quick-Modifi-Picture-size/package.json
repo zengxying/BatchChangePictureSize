@@ -1,0 +1,26 @@
+{
+  "name": "Quick-Modifi-Picture-size",
+  "version": "0.0.1",
+  "description": "The package template for getting started.",
+  "author": "Cocos Creator",
+  "main": "main.js",
+  "main-menu": {
+    "i18n:MAIN_MENU.package.title/Quick-Modifi-Picture-size/open": {
+      "message": "Quick-Modifi-Picture-size:open"
+    },
+    "i18n:MAIN_MENU.package.title/Quick-Modifi-Picture-size/hello": {
+      "message": "Quick-Modifi-Picture-size:say-hello"
+    },
+
+    "Packages/selectFile": {
+      "message": "Quick-Modifi-Picture-size:selectFile"
+    }
+  },
+  "panel": {
+    "main": "panel/index.js",
+    "type": "dockable",
+    "title": "Quick-Modifi-Picture-size",
+    "width": 400,
+    "height": 300
+  }
+}

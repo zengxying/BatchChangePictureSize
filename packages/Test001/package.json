@@ -1,0 +1,22 @@
+{
+  "name": "Test001",
+  "version": "0.0.1",
+  "description": "The package template for getting started.",
+  "author": "Cocos Creator",
+  "main": "main.js",
+  "main-menu": {
+    "i18n:MAIN_MENU.package.title/Test001/open": {
+      "message": "Test001:open"
+    },
+    "i18n:MAIN_MENU.package.title/Test001/hello": {
+      "message": "Test001:say-hello"
+    }
+  },
+  "panel": {
+    "main": "panel/index.js",
+    "type": "dockable",
+    "title": "Test001",
+    "width": 400,
+    "height": 300
+  }
+}

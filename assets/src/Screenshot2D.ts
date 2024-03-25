@@ -6,6 +6,13 @@ import SpriteFrame = cc.SpriteFrame;
 import sys = cc.sys;
 import { DomInputData } from "./DomInputData";
 import { showTips } from "./Tool";
+
+enum EditType {
+    SCALE,
+    SIZE,
+    CLIP
+}
+
 @ccclass('Screenshot2D')
 export class Screenshot2D extends cc.Component {
 
@@ -28,8 +35,8 @@ export class Screenshot2D extends cc.Component {
 
     sprites: cc.Sprite[];
 
-    private _spScaleX:number = 1;
-    private _spScaleY:number = 1;
+    private _spScaleX: number = 1;
+    private _spScaleY: number = 1;
 
     private _canvasArr: HTMLCanvasElement[] = [];
     private _canvasPool: HTMLCanvasElement[] = [];
@@ -89,39 +96,66 @@ export class Screenshot2D extends cc.Component {
     }
 
     private isTrim: boolean = true;
-    private isScale:boolean = true;
+
+    private editType: EditType = EditType.SCALE;
     private _setSpTrim(sp: cc.Sprite, isTrim: boolean) {
         sp.trim = isTrim;
         sp.sizeMode = isTrim ? cc.Sprite.SizeMode.TRIMMED : cc.Sprite.SizeMode.RAW;
     }
 
-    onChangeEditorType(a:cc.Toggle){
+    onChangeEditorType(a: cc.Toggle) {
         // this.isScale = 
-        this.isScale = a.node.name == "toggle1";
-        console.log("isScale:"+this.isScale);
+        switch (a.node.name) {
+            case "toggle1":
+                this.editType = EditType.SCALE;
+                break;
+            case "toggle2":
+                this.editType = EditType.SIZE;
+                break;
+            case "toggle3":
+                this.editType = EditType.CLIP;
+                break;
+
+            default:
+                break;
+        }
+
+        console.log("editType:EditType = :" + this.editType);
     }
 
-    onChangeEditorValue(value: string, editbox:cc.EditBox, customEventData:any){
-        this.isScale ? 
-        this.onChangeSpScale(value, editbox, customEventData):
-        this.onChangeSpSize(value, editbox, customEventData);
+    onChangeEditorValue(value: string, editbox: cc.EditBox, customEventData: any) {
+        switch (this.editType) {
+            case EditType.SCALE:
+                this.onChangeSpScale(value, editbox, customEventData);
+                break;
+            case EditType.SIZE:
+                this.onChangeSpSize(value, editbox, customEventData);
+                break;
+            case EditType.CLIP:
+                this.onChangeSpClip(value, editbox, customEventData);
+                break;
+
+        }
     }
 
-    onChangeSpScale(value: string, editbox:cc.EditBox, customEventData:any) {
+    onChangeSpScale(value: string, editbox: cc.EditBox, customEventData: any) {
         const scale = parseFloat(value);
         if (isNaN(scale)) {
             showTips("请输入数字！！！！");
             return;
         }
-        if(customEventData == "true"){
+        if (customEventData == "true") {
             this._spScaleX = scale;
-        }else{
+        } else {
             this._spScaleY = scale;
         }
-        this.sprites.forEach(sp => { sp.node.setScale(this._spScaleX, this._spScaleY) });
+        this.sprites.forEach(sp => { 
+            sp.type = cc.Sprite.Type.SIMPLE;
+            sp.node.setScale(this._spScaleX, this._spScaleY); 
+        });
     }
 
-    onChangeSpSize(value: string, editbox:cc.EditBox, customEventData:any) {
+    onChangeSpSize(value: string, editbox: cc.EditBox, customEventData: any) {
         const size = parseFloat(value);
         if (isNaN(size)) {
             showTips("请输入数字！！！！");
@@ -131,8 +165,30 @@ export class Screenshot2D extends cc.Component {
         this._spScaleY = 1;
 
         let isWidth = customEventData == "true";
-        let key = isWidth ? "width" :"height";
-        this.sprites.forEach(sp => { sp.node[key] = size;sp.node.setScale(this._spScaleX, this._spScaleY)});
+        let key = isWidth ? "width" : "height";
+        this.sprites.forEach(sp => {
+            sp.type = cc.Sprite.Type.SIMPLE;
+            sp.node[key] = size;
+            sp.node.setScale(this._spScaleX, this._spScaleY)
+        });
+    }
+
+    onChangeSpClip(value: string, editbox: cc.EditBox, customEventData: any) {
+        const size = parseFloat(value);
+        if (isNaN(size)) {
+            showTips("请输入数字！！！！");
+            return;
+        }
+        this._spScaleX = 1;
+        this._spScaleY = 1;
+
+        let isWidth = customEventData == "true";
+        let key = isWidth ? "width" : "height";
+        this.sprites.forEach(sp => {
+            sp.type = cc.Sprite.Type.TILED;
+            sp.node[key] = size;
+            sp.node.setScale(this._spScaleX, this._spScaleY)
+        });
     }
 
     onSaveAll() {
@@ -146,20 +202,20 @@ export class Screenshot2D extends cc.Component {
         //         this.canvas2image.fileDownload(URL.createObjectURL(file), file.type.replace("image/", ""), nodeName);
         //     }
         // }
-        if(this._canvasArr.length){
-            this._canvasPool  = this._canvasPool.concat(this._canvasArr);
+        if (this._canvasArr.length) {
+            this._canvasPool = this._canvasPool.concat(this._canvasArr);
         }
-        
+
         console.time("保存资源---------");
         // console.log("贴图资源:", this.textures);
         Canvas2Image.toblobCount = this.sprites.length;
         this.sprites.forEach(sp => {
             this.__saveNode(sp.node);
         });
-        Canvas2Image.blobOverCb = ()=>{
+        Canvas2Image.blobOverCb = () => {
             Canvas2Image.saveZip();
             Canvas2Image.resetZip();
-            this._canvasPool  = this._canvasPool.concat(this._canvasArr);
+            this._canvasPool = this._canvasPool.concat(this._canvasArr);
             console.timeEnd("保存资源---------");
         }
     }
@@ -216,12 +272,12 @@ export class Screenshot2D extends cc.Component {
             height = Math.floor(Math.abs(node.height * node.scaleY));
         let arrayBuffer = this._buffer;
         if (sys.isBrowser) {
-            let canvas:HTMLCanvasElement;
-            if(this._canvasPool.length){
-                
+            let canvas: HTMLCanvasElement;
+            if (this._canvasPool.length) {
+
                 canvas = this._canvasPool.pop();
                 this.clearCanvas(canvas);
-            }else{
+            } else {
 
                 canvas = document.createElement('canvas');
             }
@@ -334,7 +390,7 @@ export class Screenshot2D extends cc.Component {
 
 
 
-    clearCanvas(canvas:HTMLCanvasElement) {
+    clearCanvas(canvas: HTMLCanvasElement) {
         let ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
